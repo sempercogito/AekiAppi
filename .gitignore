@@ -25,7 +25,8 @@ ios/Runner/GeneratedPluginRegistrant.*
 .idea/
 *.iml
 *.ipr
-.vscode/
+# Only exclude local/private VS Code files; shared workspace config is committed.
+.vscode/*.code-workspace
 *.swp
 
 # macOS

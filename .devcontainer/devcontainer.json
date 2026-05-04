@@ -1,0 +1,60 @@
+{
+  "name": "AekiAppi Flutter Dev",
+
+  // Build the image from the Dockerfile in this directory.
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+
+  // Mount the local workspace into the container.
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace/aeki_appi,type=bind,consistency=cached",
+  "workspaceFolder": "/workspace/aeki_appi",
+
+  // Forward adb port so a USB-connected Android device is accessible.
+  "forwardPorts": [5037],
+  "portsAttributes": {
+    "5037": {
+      "label": "Android Debug Bridge (adb)",
+      "onAutoForward": "silent"
+    }
+  },
+
+  // Run `flutter pub get` as soon as the container is ready.
+  "postCreateCommand": "flutter pub get",
+
+  "remoteUser": "vscode",
+
+  "customizations": {
+    "vscode": {
+      // Keep these in sync with .vscode/extensions.json.
+      "extensions": [
+        "Dart-Code.flutter",
+        "Dart-Code.dart-code",
+        "usernamehw.errorlens",
+        "streetsidesoftware.code-spell-checker",
+        "github.copilot",
+        "github.copilot-chat",
+        "eamodio.gitlens"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "Dart-Code.dart-code",
+        "[dart]": {
+          "editor.formatOnSave": true,
+          "editor.selectionHighlight": false,
+          "editor.suggest.snippetsPreventQuickSuggestions": false,
+          "editor.suggestSelection": "first",
+          "editor.tabCompletion": "onlySnippets",
+          "editor.wordBasedSuggestions": "off"
+        },
+        "dart.flutterSdkPath": "/sdks/flutter",
+        "dart.lineLength": 80,
+        "dart.enableSdkFormatter": true,
+        "dart.debugExternalPackageLibraries": false,
+        "dart.debugSdkLibraries": false,
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  }
+}

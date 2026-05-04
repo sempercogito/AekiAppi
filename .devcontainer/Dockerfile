@@ -25,8 +25,10 @@ RUN apt-get update \
     && chmod 0440 /etc/sudoers.d/"${USERNAME}" \
     && rm -rf /var/lib/apt/lists/*
 
-# Make the Flutter SDK and Dart pub-cache writable by the new user.
-RUN chown -R "${USERNAME}:${USERNAME}" /sdks/flutter /root 2>/dev/null || true
+# Make the Flutter SDK writable by the new user (path may vary by image version).
+RUN for dir in /sdks/flutter /home/flutter /opt/flutter; do \
+        [ -d "$dir" ] && chown -R "${USERNAME}:${USERNAME}" "$dir" || true; \
+    done
 
 USER ${USERNAME}
 

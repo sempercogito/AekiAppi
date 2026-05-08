@@ -1,0 +1,39 @@
+{
+  // ── Editor ──────────────────────────────────────────────────────────────────
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "Dart-Code.dart-code",
+  "editor.rulers": [80],
+  "editor.tabSize": 2,
+
+  // ── Dart / Flutter ──────────────────────────────────────────────────────────
+  "[dart]": {
+    "editor.formatOnSave": true,
+    "editor.selectionHighlight": false,
+    "editor.suggest.snippetsPreventQuickSuggestions": false,
+    "editor.suggestSelection": "first",
+    "editor.tabCompletion": "onlySnippets",
+    "editor.wordBasedSuggestions": "off"
+  },
+  "dart.lineLength": 80,
+  "dart.enableSdkFormatter": true,
+  "dart.debugExternalPackageLibraries": false,
+  "dart.debugSdkLibraries": false,
+  "dart.flutterRunAdditionalArgs": ["--dart-define=FLUTTER_WEB_USE_SKIA=true"],
+  "dart.testAdditionalArgs": ["--coverage"],
+
+  // ── Files ───────────────────────────────────────────────────────────────────
+  "files.associations": {
+    "*.dart": "dart"
+  },
+  "files.exclude": {
+    "**/.dart_tool": true,
+    "**/build": true,
+    "**/.flutter-plugins": true,
+    "**/.flutter-plugins-dependencies": true
+  },
+  "search.exclude": {
+    "**/build": true,
+    "**/.dart_tool": true,
+    "**/ios/Pods": true
+  }
+}

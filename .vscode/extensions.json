@@ -1,0 +1,20 @@
+{
+  "recommendations": [
+    // Flutter & Dart language support (required)
+    "Dart-Code.flutter",
+    "Dart-Code.dart-code",
+
+    // Inline error and warning highlighting
+    "usernamehw.errorlens",
+
+    // Spell-checker for comments and strings
+    "streetsidesoftware.code-spell-checker",
+
+    // AI pair-programming
+    "github.copilot",
+    "github.copilot-chat",
+
+    // Git history and blame
+    "eamodio.gitlens"
+  ]
+}

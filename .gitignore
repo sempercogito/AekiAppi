@@ -1,0 +1,45 @@
+# Flutter/Dart build outputs
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+build/
+
+# Android build artifacts
+android/.gradle/
+android/captures/
+android/local.properties
+
+# iOS build artifacts
+ios/Flutter/flutter_export_environment.sh
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/App.framework
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+ios/Flutter/Generated.xcconfig
+ios/Runner/GeneratedPluginRegistrant.*
+
+# IDEs
+.idea/
+*.iml
+*.ipr
+# Only exclude local/private VS Code files; shared workspace config is committed.
+.vscode/*.code-workspace
+*.swp
+
+# macOS
+.DS_Store
+
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.buildlog/
+.history
+.svn/
+migrate_working_dir/

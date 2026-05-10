@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
@@ -20,10 +19,6 @@ const _commandUuid = '0000155f-1212-efde-1523-785feabcd123';
 
 /// Notify: registry-prefixed status notifications from the scooter.
 const _notifyUuid = '0000155e-1212-efde-1523-785feabcd123';
-
-/// Write: 2-byte registry ID to trigger a manual read, then read from
-/// [_commandUuid].
-const _readTriggerUuid = '00001564-1212-efde-1523-785feabcd123';
 
 // ── Notification registry IDs ─────────────────────────────────────────────────
 
@@ -132,7 +127,9 @@ class ScooterService extends ChangeNotifier {
 
   /// Returns a stream of discovered [BluetoothDevice]s whose advertisement
   /// name matches one of the known Äike scooter names.
-  Stream<BluetoothDevice> scanForScooters({Duration timeout = const Duration(seconds: 10)}) {
+  Stream<BluetoothDevice> scanForScooters({
+    Duration timeout = const Duration(seconds: 10),
+  }) {
     FlutterBluePlus.startScan(timeout: timeout);
     return FlutterBluePlus.scanResults
         .expand((results) => results)
@@ -152,7 +149,7 @@ class ScooterService extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await device.connect(autoConnect: false);
+      await device.connect(license: License.free, autoConnect: false);
       _device = device;
 
       _connectionSubscription = device.connectionState.listen((state) {
@@ -234,7 +231,9 @@ class ScooterService extends ChangeNotifier {
     final notifyChar = _findCharacteristic(services, _notifyUuid);
 
     await notifyChar.setNotifyValue(true);
-    _notifySubscription = notifyChar.onValueReceived.listen(_handleNotification);
+    _notifySubscription = notifyChar.onValueReceived.listen(
+      _handleNotification,
+    );
   }
 
   Future<void> _sendCommand(Uint8List packet) async {
@@ -281,9 +280,7 @@ class ScooterService extends ChangeNotifier {
       case _regFirmwareInfo:
         if (payload.isNotEmpty) {
           _state = _state.copyWith(
-            firmwareVersion: String.fromCharCodes(
-              payload.where((b) => b != 0),
-            ),
+            firmwareVersion: String.fromCharCodes(payload.where((b) => b != 0)),
           );
         }
       default:

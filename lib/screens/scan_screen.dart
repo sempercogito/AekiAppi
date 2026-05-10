@@ -32,9 +32,8 @@ class _ScanScreenState extends State<ScanScreen> {
     });
 
     final service = context.read<ScooterService>();
-    _scanSubscription = service
-        .scanForScooters(timeout: const Duration(seconds: 10))
-        .listen(
+    _scanSubscription =
+        service.scanForScooters(timeout: const Duration(seconds: 10)).listen(
       (device) {
         if (!_discovered.any((d) => d.remoteId == device.remoteId)) {
           setState(() => _discovered.add(device));
@@ -46,8 +45,9 @@ class _ScanScreenState extends State<ScanScreen> {
   }
 
   Future<void> _stopScan() async {
+    final service = context.read<ScooterService>();
     await _scanSubscription?.cancel();
-    await context.read<ScooterService>().stopScan();
+    await service.stopScan();
     setState(() => _isScanning = false);
   }
 
@@ -60,13 +60,13 @@ class _ScanScreenState extends State<ScanScreen> {
     if (!mounted) return;
 
     if (service.isConnected) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
-      );
+      Navigator.of(
+        context,
+      ).pushReplacement(MaterialPageRoute(builder: (_) => const HomeScreen()));
     } else if (service.error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(service.error!)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(service.error!)));
     }
   }
 
@@ -75,10 +75,7 @@ class _ScanScreenState extends State<ScanScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('AekiAppi'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('AekiAppi'), centerTitle: true),
       body: Column(
         children: [
           Padding(
@@ -100,7 +97,7 @@ class _ScanScreenState extends State<ScanScreen> {
                 Text(
                   'Make sure Bluetooth is enabled and the scooter is nearby.',
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurface.withOpacity(0.6),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -120,7 +117,8 @@ class _ScanScreenState extends State<ScanScreen> {
                           : 'No scooters found.\nTap Scan to search.',
                       textAlign: TextAlign.center,
                       style: theme.textTheme.bodyLarge?.copyWith(
-                        color: theme.colorScheme.onSurface.withOpacity(0.5),
+                        color:
+                            theme.colorScheme.onSurface.withValues(alpha: 0.5),
                       ),
                     ),
                   )
@@ -132,9 +130,11 @@ class _ScanScreenState extends State<ScanScreen> {
                       final device = _discovered[index];
                       return ListTile(
                         leading: const Icon(Icons.bluetooth),
-                        title: Text(device.platformName.isNotEmpty
-                            ? device.platformName
-                            : device.remoteId.toString()),
+                        title: Text(
+                          device.platformName.isNotEmpty
+                              ? device.platformName
+                              : device.remoteId.toString(),
+                        ),
                         subtitle: Text(device.remoteId.toString()),
                         trailing: const Icon(Icons.chevron_right),
                         onTap: () => _connectTo(device),

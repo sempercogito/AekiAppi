@@ -62,6 +62,71 @@ jobs:
           path: coverage/lcov.info
           if-no-files-found: ignore
 
+  # ── Build Web ───────────────────────────────────────────────────────────────
+  build-web:
+    name: Build Web
+    runs-on: ubuntu-latest
+    needs: [ analyze, test ]
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Add web platform
+        run: flutter create --platforms=web .
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build web
+        run: flutter build web
+
+      - name: Upload web build
+        uses: actions/upload-artifact@v4
+        with:
+          name: flutter-web-build
+          path: build/web/
+
+  # ── Build Linux ──────────────────────────────────────────────────────────────
+  build-linux:
+    name: Build Linux
+    runs-on: ubuntu-latest
+    needs: [ analyze, test ]
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Linux desktop dependencies
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y clang cmake ninja-build libgtk-3-dev pkg-config
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Add linux platform
+        run: flutter create --platforms=linux .
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build linux
+        run: flutter build linux --release
+
+      - name: Upload linux build
+        uses: actions/upload-artifact@v4
+        with:
+          name: flutter-linux-build
+          path: build/linux/x64/release/bundle/
+
   # ── Build Android APK ────────────────────────────────────────────────────────
   build-android:
     name: Build Android APK
@@ -81,6 +146,22 @@ jobs:
         with:
           channel: stable
           cache: true
+
+      - name: Detect Android SDK root
+        shell: bash
+        run: |
+          set -euo pipefail
+          SDK_ROOT="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-/usr/local/lib/android/sdk}}"
+          echo "ANDROID_SDK_ROOT=$SDK_ROOT" >> "$GITHUB_ENV"
+          echo "ANDROID_HOME=$SDK_ROOT" >> "$GITHUB_ENV"
+          echo "$SDK_ROOT/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
+          echo "$SDK_ROOT/platform-tools" >> "$GITHUB_PATH"
+
+      - name: Install Android NDK
+        shell: bash
+        run: |
+          set -euo pipefail
+          sdkmanager --sdk_root="$ANDROID_SDK_ROOT" --install "ndk;26.1.10909125"
 
       - name: Install dependencies
         run: flutter pub get

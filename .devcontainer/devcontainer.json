@@ -12,16 +12,28 @@
   "workspaceFolder": "/workspace/aeki_appi",
 
   // Forward adb port so a USB-connected Android device is accessible.
-  "forwardPorts": [5037],
+  // Forward 8080 for Flutter web dev server.
+  "forwardPorts": [5037, 8080],
   "portsAttributes": {
     "5037": {
       "label": "Android Debug Bridge (adb)",
       "onAutoForward": "silent"
+    },
+    "8080": {
+      "label": "Flutter Web Dev Server",
+      "onAutoForward": "silent"
     }
   },
 
-  // Run `flutter pub get` as soon as the container is ready.
-  "postCreateCommand": "flutter pub get",
+  // Prepare Android SDK components/licenses and fetch Dart packages.
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+
+  // Keep VS Code server binaries/data on the dedicated mounted volume.
+  "remoteEnv": {
+    "VSCODE_AGENT_FOLDER": "/vscode/vscode-server-insiders",
+    "CHROME_EXECUTABLE": "/usr/bin/chromium-browser",
+    "FLUTTER_ROOT": "/opt/flutter-sdk"
+  },
 
   "remoteUser": "vscode",
 
@@ -48,12 +60,12 @@
           "editor.tabCompletion": "onlySnippets",
           "editor.wordBasedSuggestions": "off"
         },
-        "dart.flutterSdkPath": "/sdks/flutter",
+        "dart.flutterSdkPath": "/opt/flutter-sdk",
         "dart.lineLength": 80,
         "dart.enableSdkFormatter": true,
         "dart.debugExternalPackageLibraries": false,
         "dart.debugSdkLibraries": false,
-        "terminal.integrated.defaultProfile.linux": "bash"
+        "terminal.integrated.defaultProfile.linux": "zsh"
       }
     }
   }

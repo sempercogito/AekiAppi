@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -6,18 +5,9 @@ import 'screens/scan_screen.dart';
 import 'screens/unsupported_platform_screen.dart';
 import 'services/scooter_service.dart';
 
-/// Returns true on platforms where [flutter_blue_plus] has native BLE support:
-/// Android, iOS, macOS, and Linux.
-///
-/// Web and Windows are not supported; those builds show
-/// [UnsupportedPlatformScreen] instead.
-bool get _isBleSupported {
-  if (kIsWeb) return false;
-  return defaultTargetPlatform == TargetPlatform.android ||
-      defaultTargetPlatform == TargetPlatform.iOS ||
-      defaultTargetPlatform == TargetPlatform.macOS ||
-      defaultTargetPlatform == TargetPlatform.linux;
-}
+/// Returns true—all platforms are supported via [universal_ble]
+/// (Android, iOS, macOS, Linux, Windows, Web)
+bool get _isBleSupported => true;
 
 void main() {
   runApp(const AekiAppi());

@@ -16,9 +16,9 @@ public final class GeneratedPluginRegistrant {
   private static final String TAG = "GeneratedPluginRegistrant";
   public static void registerWith(@NonNull FlutterEngine flutterEngine) {
     try {
-      flutterEngine.getPlugins().add(new com.lib.flutter_blue_plus.FlutterBluePlusPlugin());
+      flutterEngine.getPlugins().add(new com.navideck.universal_ble.UniversalBlePlugin());
     } catch (Exception e) {
-      Log.e(TAG, "Error registering plugin flutter_blue_plus_android, com.lib.flutter_blue_plus.FlutterBluePlusPlugin", e);
+      Log.e(TAG, "Error registering plugin universal_ble, com.navideck.universal_ble.UniversalBlePlugin", e);
     }
   }
 }

@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:provider/provider.dart';
+import 'package:universal_ble/universal_ble.dart';
 
 import '../services/scooter_service.dart';
 import 'home_screen.dart';
@@ -15,9 +15,9 @@ class ScanScreen extends StatefulWidget {
 }
 
 class _ScanScreenState extends State<ScanScreen> {
-  final List<BluetoothDevice> _discovered = [];
+  final List<BleDevice> _discovered = [];
   bool _isScanning = false;
-  StreamSubscription<BluetoothDevice>? _scanSubscription;
+  StreamSubscription<BleDevice>? _scanSubscription;
 
   @override
   void dispose() {
@@ -32,15 +32,20 @@ class _ScanScreenState extends State<ScanScreen> {
     });
 
     final service = context.read<ScooterService>();
-    _scanSubscription =
-        service.scanForScooters(timeout: const Duration(seconds: 10)).listen(
-      (device) {
-        if (!_discovered.any((d) => d.remoteId == device.remoteId)) {
-          setState(() => _discovered.add(device));
+    _scanSubscription = service.scanForScooters().listen(
+      (bleDevice) {
+        if (!_discovered.any((d) => d.deviceId == bleDevice.deviceId)) {
+          setState(() => _discovered.add(bleDevice));
         }
       },
-      onDone: () => setState(() => _isScanning = false),
-      onError: (_) => setState(() => _isScanning = false),
+      onDone: () async {
+        await service.stopScan();
+        if (mounted) setState(() => _isScanning = false);
+      },
+      onError: (_) async {
+        await service.stopScan();
+        if (mounted) setState(() => _isScanning = false);
+      },
     );
   }
 
@@ -51,12 +56,12 @@ class _ScanScreenState extends State<ScanScreen> {
     setState(() => _isScanning = false);
   }
 
-  Future<void> _connectTo(BluetoothDevice device) async {
+  Future<void> _connectTo(BleDevice bleDevice) async {
     await _stopScan();
     if (!mounted) return;
 
     final service = context.read<ScooterService>();
-    await service.connect(device);
+    await service.connect(bleDevice);
     if (!mounted) return;
 
     if (service.isConnected) {
@@ -127,17 +132,17 @@ class _ScanScreenState extends State<ScanScreen> {
                     itemCount: _discovered.length,
                     separatorBuilder: (_, __) => const Divider(),
                     itemBuilder: (context, index) {
-                      final device = _discovered[index];
+                      final bleDevice = _discovered[index];
                       return ListTile(
                         leading: const Icon(Icons.bluetooth),
                         title: Text(
-                          device.platformName.isNotEmpty
-                              ? device.platformName
-                              : device.remoteId.toString(),
+                          bleDevice.name?.isNotEmpty ?? false
+                              ? bleDevice.name!
+                              : 'Äike',
                         ),
-                        subtitle: Text(device.remoteId.toString()),
+                        subtitle: Text(bleDevice.deviceId),
                         trailing: const Icon(Icons.chevron_right),
-                        onTap: () => _connectTo(device),
+                        onTap: () => _connectTo(bleDevice),
                       );
                     },
                   ),

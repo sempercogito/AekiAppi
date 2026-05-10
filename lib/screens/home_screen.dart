@@ -17,7 +17,10 @@ class HomeScreen extends StatelessWidget {
 
         return Scaffold(
           appBar: AppBar(
-            title: Text(device?.platformName ?? 'Äike Scooter'),
+            title: Text(
+                device != null && device.name != null && device.name!.isNotEmpty
+                    ? device.name!
+                    : 'Äike Scooter'),
             centerTitle: true,
             actions: [
               IconButton(

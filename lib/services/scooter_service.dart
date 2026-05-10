@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:universal_ble/universal_ble.dart';
 
 import '../models/scooter_state.dart';
 
@@ -95,8 +95,9 @@ Uint8List computeAuthResponse(List<int> challenge, {List<int>? key}) {
 
 /// Manages scanning, connecting and communicating with an Äike scooter over BLE.
 ///
+/// Uses [universal_ble] for cross-platform support (Android, iOS, macOS, Linux, Windows, Web).
 /// Exposes [scooterState] and [isConnected] for the UI, and command methods
-/// for interacting with the scooter.  Implements [ChangeNotifier] so it works
+/// for interacting with the scooter. Implements [ChangeNotifier] so it works
 /// directly with the `provider` package.
 class ScooterService extends ChangeNotifier {
   ScooterService();
@@ -106,8 +107,8 @@ class ScooterService extends ChangeNotifier {
   ScooterState _state = const ScooterState();
   ScooterState get scooterState => _state;
 
-  BluetoothDevice? _device;
-  BluetoothDevice? get connectedDevice => _device;
+  BleDevice? _device;
+  BleDevice? get connectedDevice => _device;
 
   bool _isConnected = false;
   bool get isConnected => _isConnected;
@@ -120,43 +121,40 @@ class ScooterService extends ChangeNotifier {
 
   // ── Private fields ──────────────────────────────────────────────────────────
 
-  StreamSubscription<BluetoothConnectionState>? _connectionSubscription;
-  StreamSubscription<List<int>>? _notifySubscription;
+  StreamSubscription<bool>? _connectionSubscription;
+  StreamSubscription<Uint8List>? _notifySubscription;
 
   // ── Scanning ────────────────────────────────────────────────────────────────
 
-  /// Returns a stream of discovered [BluetoothDevice]s whose advertisement
+  /// Returns a stream of discovered [BleDevice]s whose advertisement
   /// name matches one of the known Äike scooter names.
-  Stream<BluetoothDevice> scanForScooters({
-    Duration timeout = const Duration(seconds: 10),
-  }) {
-    FlutterBluePlus.startScan(timeout: timeout);
-    return FlutterBluePlus.scanResults
-        .expand((results) => results)
-        .where((result) => _deviceNames.contains(result.device.platformName))
-        .map((result) => result.device);
+  Stream<BleDevice> scanForScooters() {
+    UniversalBle.startScan();
+    return UniversalBle.scanStream
+        .where((device) => _deviceNames.contains(device.name))
+        .distinct((a, b) => a.deviceId == b.deviceId);
   }
 
-  Future<void> stopScan() => FlutterBluePlus.stopScan();
+  Future<void> stopScan() => UniversalBle.stopScan();
 
   // ── Connection lifecycle ────────────────────────────────────────────────────
 
-  /// Connects to [device], runs the challenge-response authentication, and
+  /// Connects to [bleDevice], runs the challenge-response authentication, and
   /// subscribes to status notifications.
-  Future<void> connect(BluetoothDevice device) async {
+  Future<void> connect(BleDevice bleDevice) async {
     _setError(null);
     _isConnecting = true;
     notifyListeners();
 
     try {
-      await device.connect(license: License.free, autoConnect: false);
-      _device = device;
+      await bleDevice.connect();
+      _device = bleDevice;
 
-      _connectionSubscription = device.connectionState.listen((state) {
-        final nowConnected = state == BluetoothConnectionState.connected;
-        if (_isConnected != nowConnected) {
-          _isConnected = nowConnected;
-          if (!nowConnected) {
+      _connectionSubscription =
+          bleDevice.connectionStream.listen((isConnected) {
+        if (_isConnected != isConnected) {
+          _isConnected = isConnected;
+          if (!isConnected) {
             _notifySubscription?.cancel();
             _notifySubscription = null;
             _state = const ScooterState();
@@ -165,8 +163,8 @@ class ScooterService extends ChangeNotifier {
         }
       });
 
-      await _authenticate(device);
-      await _subscribeToNotifications(device);
+      await _authenticate(bleDevice);
+      await _subscribeToNotifications(bleDevice);
 
       _isConnected = true;
     } catch (e) {
@@ -215,25 +213,41 @@ class ScooterService extends ChangeNotifier {
 
   // ── Private helpers ─────────────────────────────────────────────────────────
 
-  Future<void> _authenticate(BluetoothDevice device) async {
-    final services = await device.discoverServices();
+  Future<void> _authenticate(BleDevice bleDevice) async {
+    try {
+      final challengeChar = await bleDevice.getCharacteristic(
+        _challengeUuid,
+        service: '00002500-1212-efde-1523-785feabcd123',
+      );
+      final responseChar = await bleDevice.getCharacteristic(
+        _responseUuid,
+        service: '00002500-1212-efde-1523-785feabcd123',
+      );
 
-    final challengeChar = _findCharacteristic(services, _challengeUuid);
-    final responseChar = _findCharacteristic(services, _responseUuid);
-
-    final challenge = await challengeChar.read();
-    final response = computeAuthResponse(challenge);
-    await responseChar.write(response, withoutResponse: true);
+      final challenge = await challengeChar.read();
+      final response = computeAuthResponse(challenge);
+      await responseChar.write(response, withResponse: false);
+    } catch (e) {
+      _setError('Authentication failed: $e');
+      rethrow;
+    }
   }
 
-  Future<void> _subscribeToNotifications(BluetoothDevice device) async {
-    final services = await device.discoverServices();
-    final notifyChar = _findCharacteristic(services, _notifyUuid);
+  Future<void> _subscribeToNotifications(BleDevice bleDevice) async {
+    try {
+      final notifyChar = await bleDevice.getCharacteristic(
+        _notifyUuid,
+        service: '00002500-1212-efde-1523-785feabcd123',
+      );
 
-    await notifyChar.setNotifyValue(true);
-    _notifySubscription = notifyChar.onValueReceived.listen(
-      _handleNotification,
-    );
+      await notifyChar.notifications.subscribe();
+      _notifySubscription = notifyChar.onValueReceived.listen(
+        _handleNotification,
+      );
+    } catch (e) {
+      _setError('Failed to subscribe to notifications: $e');
+      rethrow;
+    }
   }
 
   Future<void> _sendCommand(Uint8List packet) async {
@@ -243,15 +257,17 @@ class ScooterService extends ChangeNotifier {
     }
     _setError(null);
     try {
-      final services = await _device!.discoverServices();
-      final cmdChar = _findCharacteristic(services, _commandUuid);
-      await cmdChar.write(packet, withoutResponse: true);
+      final cmdChar = await _device!.getCharacteristic(
+        _commandUuid,
+        service: '00002500-1212-efde-1523-785feabcd123',
+      );
+      await cmdChar.write(packet, withResponse: false);
     } catch (e) {
       _setError('Command failed: $e');
     }
   }
 
-  void _handleNotification(List<int> data) {
+  void _handleNotification(Uint8List data) {
     if (data.length < 2) return;
 
     final registryId = (data[0] << 8) | data[1];
@@ -312,27 +328,18 @@ class ScooterService extends ChangeNotifier {
     );
   }
 
-  BluetoothCharacteristic _findCharacteristic(
-    List<BluetoothService> services,
-    String uuid,
-  ) {
-    for (final service in services) {
-      for (final char in service.characteristics) {
-        if (char.characteristicUuid.toString().toLowerCase() ==
-            uuid.toLowerCase()) {
-          return char;
-        }
-      }
-    }
-    throw StateError('Characteristic $uuid not found on device');
-  }
-
   Future<void> _cleanup() async {
     _notifySubscription?.cancel();
     _notifySubscription = null;
     _connectionSubscription?.cancel();
     _connectionSubscription = null;
-    await _device?.disconnect();
+    if (_device != null) {
+      try {
+        await _device!.disconnect();
+      } catch (e) {
+        // Ignore errors during disconnect
+      }
+    }
     _device = null;
     _isConnected = false;
     _state = const ScooterState();

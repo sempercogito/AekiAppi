@@ -187,7 +187,7 @@ The app requests the following permissions at runtime:
 
 - Uses `flutter_blue_plus` web plugin for Bluetooth connectivity
 - Requires HTTPS or localhost (browser security policy)
-- Performance optimized with `--web-renderer html`
+- Built with Flutter's current default web renderer
 
 ### Linux & macOS
 

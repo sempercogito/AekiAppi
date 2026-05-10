@@ -28,6 +28,7 @@ RUN apt-get update \
         xz-utils \
         zip \
         file \
+        nano \
         locales \
         adb \
         openjdk-17-jdk \
@@ -95,6 +96,8 @@ RUN sed -i \
         "${HOME}/.zshrc" \
     && grep -q '\[\[ ! -f ~/.p10k.zsh \]\] || source ~/.p10k.zsh' "${HOME}/.zshrc" \
        || printf '\n[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh\n' >> "${HOME}/.zshrc" \
+     && grep -Fq '[[ "$TERM_PROGRAM" == "vscode" ]] && . "$(code --locate-shell-integration-path zsh)"' "${HOME}/.zshrc" \
+         || printf '\n[[ "$TERM_PROGRAM" == "vscode" ]] && . "$(code --locate-shell-integration-path zsh)"\n' >> "${HOME}/.zshrc" \
     && printf '\n# Show system info on new shell\nneofetch\n' >> "${HOME}/.zshrc" \
     && sudo chsh -s /usr/bin/zsh "${USERNAME}"
 

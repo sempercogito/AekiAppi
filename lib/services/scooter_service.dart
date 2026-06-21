@@ -226,7 +226,7 @@ class ScooterService extends ChangeNotifier {
 
       final challenge = await challengeChar.read();
       final response = computeAuthResponse(challenge);
-      await responseChar.write(response, withResponse: false);
+      await responseChar.write(response, withResponse: true);
     } catch (e) {
       _setError('Authentication failed: $e');
       rethrow;
@@ -261,7 +261,7 @@ class ScooterService extends ChangeNotifier {
         _commandUuid,
         service: '00001554-1212-efde-1523-785feabcd123',
       );
-      await cmdChar.write(packet, withResponse: false);
+      await cmdChar.write(packet, withResponse: true);
     } catch (e) {
       _setError('Command failed: $e');
     }

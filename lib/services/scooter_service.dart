@@ -217,11 +217,11 @@ class ScooterService extends ChangeNotifier {
     try {
       final challengeChar = await bleDevice.getCharacteristic(
         _challengeUuid,
-        service: '00002500-1212-efde-1523-785feabcd123',
+        service: '00002554-1212-efde-1523-785feabcd123',
       );
       final responseChar = await bleDevice.getCharacteristic(
         _responseUuid,
-        service: '00002500-1212-efde-1523-785feabcd123',
+        service: '00002554-1212-efde-1523-785feabcd123',
       );
 
       final challenge = await challengeChar.read();
@@ -237,7 +237,7 @@ class ScooterService extends ChangeNotifier {
     try {
       final notifyChar = await bleDevice.getCharacteristic(
         _notifyUuid,
-        service: '00002500-1212-efde-1523-785feabcd123',
+        service: '00001554-1212-efde-1523-785feabcd123',
       );
 
       await notifyChar.notifications.subscribe();
@@ -259,7 +259,7 @@ class ScooterService extends ChangeNotifier {
     try {
       final cmdChar = await _device!.getCharacteristic(
         _commandUuid,
-        service: '00002500-1212-efde-1523-785feabcd123',
+        service: '00001554-1212-efde-1523-785feabcd123',
       );
       await cmdChar.write(packet, withResponse: false);
     } catch (e) {
